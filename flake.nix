@@ -12,16 +12,42 @@
     pkgs = import nixpkgs {
       inherit system;
     };
+    stdenv = pkgs.clangStdenv;
 
     pname = "ray-tracing";
     version = "0.1.0";
+    src = ./src/.;
 
-    buildInputs = with pkgs; [];
-    nativeBuildInputs = with pkgs; [];
+    buildInputs = with pkgs; [
+      glibc
+    ];
+
+    nativeBuildInputs = with pkgs; [
+      pkg-config
+      clang-tools
+      lldb
+      valgrind
+    ];
   in
   {
-    devShells.default = pkgs.mkShell {
+    devShells.default = pkgs.mkShell.override { stdenv = pkgs.clangStdenv; } {
       inherit pname version buildInputs nativeBuildInputs;
+
+      # Set default cflags for shell
+      NIX_CFLAGS_COMPILE = "-std=c++17 -Wall -Werror -g -fsanitize=address";
+    };
+
+    packages.default = stdenv.mkDerivation {
+      inherit pname version buildInputs nativeBuildInputs src;
+
+      buildPhase = ''
+        $CC $CFLAGS $LDFLAGS $src/main.cc -o $pname
+      '';
+
+      installPhase = ''
+        mkdir -p $out/bin
+        mv $pname $out/bin/$pname
+      '';
     };
   });
 }
