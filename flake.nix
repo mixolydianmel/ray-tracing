@@ -19,7 +19,7 @@
     src = ./src/.;
 
     buildInputs = with pkgs; [
-      glibc
+      libcxx
     ];
 
     nativeBuildInputs = with pkgs; [
@@ -41,7 +41,7 @@
       inherit pname version buildInputs nativeBuildInputs src;
 
       buildPhase = ''
-        $CC $CFLAGS $LDFLAGS $src/main.cc -o $pname
+        $CXX $CFLAGS $LDFLAGS $src/main.cpp -o $pname
       '';
 
       installPhase = ''
